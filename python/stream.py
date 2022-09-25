@@ -96,6 +96,13 @@ class CustomMagics(Magics):
   @magic_arguments.argument('--no-display', action='store_true')
   @cell_magic
   def tee(self, line, cell):
+    with open("hihi.md", "a") as fio:
+      md_cell = f"""
+```python
+{cell}
+```
+"""
+      fio.write(md_cell)
     args = magic_arguments.parse_argstring(self.tee, line)
     out = not args.no_stdout
     err = not args.no_stderr
