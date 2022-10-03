@@ -185,8 +185,8 @@ notify_obj = require('notify')(nprint, 'warn', {{title='started : code'}})
     captured_out = ansi_escape.sub('',''.join(chunks)).replace('\r','\n')
 
 
-    vim.command("e")
-    vim.command("G")
+    # vim.command("e")
+    # vim.command("G")
 
     if result.error_before_exec or result.error_in_exec:
       title = 'Error!'
