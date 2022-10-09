@@ -38,8 +38,12 @@ M.move_cursor = function(direction)
   end
   if direction == "up" then
     vim.api.nvim_win_set_cursor(0, {pos1, 1})
+  elseif direction == "v_up" then
+    vim.api.nvim_win_set_cursor(0, {pos1+3, 1})
   elseif direction == "down" then
     vim.api.nvim_win_set_cursor(0, {pos2, 1})
+  elseif direction == "v_down" then
+    vim.api.nvim_win_set_cursor(0, {pos2-2, 1})
   end
 
   return code
@@ -52,6 +56,13 @@ M.format_current_section = function()
     pos2 = vim.fn.line('$')
   end
   require('neovim-ds.lua.formatter').format_dat_sql(nil, pos1, pos2)
+
+  local pos1 = vim.fn.search('# %%', 'nbW') + 1
+  local pos2 = vim.fn.search('# %%', 'nW') - 1
+  -- vim.fn.append(pos2 - 1, '\r')
+  vim.api.nvim_buf_set_lines(0, pos2, pos2, false, {''})
+  vim.api.nvim_buf_set_lines(0, pos1, pos1, false, {''})
+
 end
 
 
@@ -143,14 +154,14 @@ M.create_marker = function(type, is_cell_end)
   -- type: python, markdown
   -- if the end of the doc, add one more marker -> It's because of the treesitter highlight behaviour.
   if type == 'python' then
-    marker = {'# %%', '#  ', '', ''}
+    marker = {'# %% NOTE:', '#  ', '', ''}
   elseif type == 'markdown' then
-    marker = {'','# %% [markdown]', '"""', '<!--markdown-->', '', '"""', '', ''}
+    marker = {'','# %% NOTE: [markdown]', '_ = """', '<!--markdown-->', '', '"""', '', ''}
   else
     marker =  {'##', '', ''}
   end
   if is_cell_end then
-    table.insert(marker, '# %%')
+    table.insert(marker, '# %% NOTE:')
   end
   return marker
 end
