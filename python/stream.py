@@ -8,6 +8,7 @@ import sys
 import time
 import uuid
 from io import StringIO
+from utils import summary
 
 from IPython.core import magic_arguments
 from IPython.core.displayhook import CapturingDisplayHook
@@ -33,20 +34,21 @@ ansi_escape = re.compile(
 ''', re.VERBOSE)
 
 
-def string_head(input_str, max_line=5, max_letter=40):
-  """return head of the string. Used for neovim notification
-
-  Args:
-      input_str (str): output string
-      max_line (): maximum number of lines
-      max_letter (): maximum number of rows
-
-  Returns:
-      truncated string
-  """
-  lines = input_str.split("\n")
-  lines = [line[:max_letter] + ".." if len(line) > max_letter else line for line in lines]
-  return '\n'.join(lines[:min(len(lines), max_line)])
+# def summary(input_str, mode='head', threshold_lines=5, threshold_letters=40):
+#   """return head of the string. Used for neovim notification
+#
+#   Args:
+#       input_str (str): output string
+#       threshold_lines (): maximum number of lines
+#       threshold_letters (): maximum number of rows
+#
+#   Returns:
+#       truncated string
+#   """
+#   lines = input_str.split('\n')
+#   lines = [line[:threshold_letters] + '..' if len(line) > threshold_letters else line for line in lines]
+#   return '\n'.join(lines[:min(len(lines), threshold_lines)]) if mode == 'head' else '\n'.join(
+#       lines[-1 * threshold_lines:])
 
 
 def kshow(plt):
@@ -67,6 +69,7 @@ class NeoDSStream(StringIO):
     self.fio = fio
     self.vim = vim
     self.notifier_id = notifier_id
+    self.show_notify = ''
     super().__init__(initial_value, newline)
 
   def write(self, data):
@@ -76,9 +79,10 @@ class NeoDSStream(StringIO):
       self.fio.write(plain_data)
       self.fio.flush()
       chunks.append(data)
+      self.show_notify = self.show_notify + plain_data
       self.vim.exec_lua(f"""
 local nprint = [[
-{plain_data}
+{summary(self.show_notify, mode='tail')}
 ]]
 notifiers['{self.notifier_id}'] = require('notify')(nprint, 'warn', {{title='processing', timeout = 300000, replace=notifiers['{self.notifier_id}']}})
       """)
@@ -163,11 +167,11 @@ class DsMagic(Magics):
     with open(buf + "_code", 'r') as input_file:
       input_code = re.sub(chr(0), '\n', input_file.read())
 
-    notifier_id = str(uuid.uuid4()).replace("-","")
+    notifier_id = str(uuid.uuid4()).replace("-", "")
 
     vim.exec_lua(f"""
 local nprint = [[
-{string_head(input_code.strip())}
+{summary(input_code.strip())}
 ]]
 notifiers = {{}}
 notifiers['{notifier_id}'] = require('notify')(nprint, 'warn', {{title='started : code', timeout = 300000}})
@@ -214,14 +218,13 @@ notifiers['{notifier_id}'] = require('notify')(nprint, 'warn', {{title='started 
     else:
       title = 'Done'
       state = 'info'
-      # content = string_head(captured_out.strip())
+      # content = summary(captured_out.strip())
 
-      content = string_head(str(iostream).strip())
+      content = summary(str(iostream).strip())
       # content = str(iostream).strip()
 
     with open(buf, "a") as fio:
       fio.write(f"\n<!-- {datetime.datetime.utcnow()}, Elapsed: {elapsed}, filename: TODO -->\n")
-
 
     vim.exec_lua(f"""
 local nprint = [[
@@ -238,4 +241,3 @@ if vim.g.focused == 0 then
   ]])
 end
     """)
-

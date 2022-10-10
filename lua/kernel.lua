@@ -80,10 +80,33 @@ print("send")
   ]])
 end
 
+M.async_send_current_section = function(terminal_job_id, target_processor, block)
+  -- send current section to ipython kernel
+  if terminal_job_id == nil then
+    local terminal_job_ids, _ = require('neovim-ds.lua.terminal').get_terminals()
+    terminal_job_id = terminal_job_ids[1]
+  end
+
+  code = M.get_section()
+  M.save_code_to_file(code, vim.g.neods_output_buf .. "_code") -- TODO: replace to json
+  M.async_ipython_send_code(terminal_job_id, [[
+print("send")
+  ]], target_processor, block)
+end
+
 M.ipython_send_code = function(terminal_job_id, code)
   -- Send codes to specified terminal
-  -- term_cmd = "%%neods output --stream-buffer " .. vim.g.neods_output_buf .. " --vpath " .. vim.g.neods_target_channel .. "\n" .. code .. "\r\r"
   term_cmd = "%%neods output --stream-buffer " .. vim.g.neods_output_buf .. " --vpath " .. vim.g.neods_target_channel .. "\n" .. code .. "\r\r"
+  require('neovim-ds.lua.terminal').send_command(terminal_job_id, term_cmd)
+end
+
+M.async_ipython_send_code = function(terminal_job_id, code, target_processor, block)
+  -- Send codes to specified terminal
+  if block == nil then
+    term_cmd = "%%px --targets " .. target_processor .. " \n" .. "%%async_neods --stream-buffer " .. vim.g.neods_output_buf .. " --vpath " .. vim.g.neods_target_channel .. "\n" .. code .. "\r\r"
+  else
+    term_cmd = "%%px --targets " .. target_processor .. " --noblock" .. "\n" .. "%%neods output --stream-buffer " .. vim.g.neods_output_buf .. " --vpath " .. vim.g.neods_target_channel .. "\n" .. code .. "\r\r"
+  end
   require('neovim-ds.lua.terminal').send_command(terminal_job_id, term_cmd)
 end
 
@@ -98,6 +121,8 @@ M.open_ipykernel = function()
   -- Open ipython kernel with new nvim terminal, and temporary buffer
   vim.cmd("terminal")
   vim.cmd('sleep 100m')
+
+
   local terminal_job_ids, _ = require('neovim-ds.lua.terminal').get_terminals()
 
   -- conda activate
@@ -113,19 +138,22 @@ M.open_ipykernel = function()
   -- Startup commands for ipython
   lua_path = script_path()
   startup_cmds = {}
-  table.insert(startup_cmds, "from pathlib import Path")
-  table.insert(startup_cmds, "import sys")
-  table.insert(startup_cmds, "import matplotlib")
-  table.insert(startup_cmds, "matplotlib.rcParams['figure.figsize'] = (12, 12)")
-  table.insert(startup_cmds, "matplotlib.rcParams['axes.labelsize'] = 20")
-  table.insert(startup_cmds, "matplotlib.rcParams['axes.titlesize'] = 20")
-  table.insert(startup_cmds, "matplotlib.rcParams['xtick.labelsize'] = 20")
-  table.insert(startup_cmds, "matplotlib.rcParams['ytick.labelsize'] = 20")
-  -- table.insert(startup_cmds, "matplotlib.rcParams['figure.labelsize'] = 20")
-  table.insert(startup_cmds, "sys.path.append(str(Path(\\\"" .. lua_path .."\\\").parent / \\\"python\\\"))")
-  table.insert(startup_cmds, "from stream import DsMagic, kshow")
-  table.insert(startup_cmds, "from IPython import get_ipython")
-  table.insert(startup_cmds, "get_ipython().register_magics(DsMagic)")
+  table.insert(startup_cmds, "os.environ['NEODS_ASYNC_BUF'] = '".. vim.g.neods_output_buf .. "'")
+  table.insert(startup_cmds, "os.environ['NEODS_ASYNC_VPATH'] = '".. vim.g.neods_target_channel .. "'")
+  -- table.insert(startup_cmds, "from pathlib import Path")
+  -- table.insert(startup_cmds, "import sys")
+  -- table.insert(startup_cmds, "import matplotlib")
+  -- table.insert(startup_cmds, "matplotlib.rcParams['figure.figsize'] = (12, 12)")
+  -- table.insert(startup_cmds, "matplotlib.rcParams['axes.labelsize'] = 20")
+  -- table.insert(startup_cmds, "matplotlib.rcParams['axes.titlesize'] = 20")
+  -- table.insert(startup_cmds, "matplotlib.rcParams['xtick.labelsize'] = 20")
+  -- table.insert(startup_cmds, "matplotlib.rcParams['ytick.labelsize'] = 20")
+  -- table.insert(startup_cmds, "sys.path.append(str(Path(\\\"" .. lua_path .."\\\").parent / \\\"python\\\"))")
+  -- table.insert(startup_cmds, "from stream import DsMagic, kshow")
+  -- table.insert(startup_cmds, "from IPython import get_ipython")
+  -- table.insert(startup_cmds, "get_ipython().register_magics(DsMagic)")
+  -- table.insert(startup_cmds, "import ipyparallel as ipp")
+  -- table.insert(startup_cmds, "rc = ipp.Cluster(n=4).start_and_connect_sync()")
 
   startup_cmd = ''
   for _, cmd in ipairs(startup_cmds) do
@@ -133,7 +161,7 @@ M.open_ipykernel = function()
   end
 
   -- open ipython
-  require('neovim-ds.lua.terminal').send_command(terminal_job_ids[1], ipython3 .. ' -i --no-autoindent -c "' .. startup_cmd .. '"')
+  require('neovim-ds.lua.terminal').send_command(terminal_job_ids[1], ipython3 .. ' -i --no-autoindent --profile=neods -c "' .. startup_cmd .. '"')
   vim.cmd('sleep 1')
   vim.api.nvim_create_autocmd({"FocusGained", "BufEnter", "CursorHold", "CursorHoldI"}, {
     callback = function()
