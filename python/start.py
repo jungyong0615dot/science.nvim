@@ -1,6 +1,7 @@
 """
 Ipython config for neods
 """
+# ipython profile create neods
 
 import os
 import sys
