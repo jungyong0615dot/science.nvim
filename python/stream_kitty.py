@@ -10,18 +10,17 @@ import time
 import uuid
 from io import StringIO
 from pathlib import Path
-import pandas as pd
 
+import pandas as pd
 from IPython.core import magic_arguments
 from IPython.core.displayhook import CapturingDisplayHook
 from IPython.core.displaypub import CapturingDisplayPublisher
 from IPython.core.getipython import get_ipython
 from IPython.core.magic import Magics, cell_magic, magics_class
+from IPython.display import display
 from IPython.utils.capture import CapturedIO
 from pynvim import attach
 from utils import summary
-
-chunks = []
 
 if 'tmux' in os.getenv("TMUX", '') or 'kitty' in os.getenv("TERM", ''):
   import matplotlib
@@ -57,6 +56,7 @@ def kshow(plt):
   plt.savefig(savepath)
   print(f'![hihi]({savepath})')
 
+
 def mprint(df):
   """ Pretty print for pd.dataframe in cli environment
 
@@ -77,9 +77,8 @@ def mprint(df):
 
 class NeoDSStream(StringIO):
 
-  def __init__(self, initial_value='', newline='\n', stream=None, fio=None, vim=None, notifier_id=None):
+  def __init__(self, initial_value='', newline='\n', stream=None, vim=None, notifier_id=None):
     self.stream = stream
-    self.fio = fio
     self.vim = vim
     self.notifier_id = notifier_id
     self.show_notify = ''
@@ -89,9 +88,6 @@ class NeoDSStream(StringIO):
     if self.stream is not None:
       self.stream.write(data)
       plain_data = ansi_escape.sub('', data).replace('\r', '\n')
-      self.fio.write(plain_data)
-      self.fio.flush()
-      chunks.append(data)
       self.show_notify = self.show_notify + plain_data
       self.vim.exec_lua(f"""
 local nprint = [[
@@ -113,10 +109,8 @@ class NeoDSCaptureOutput():
     self.stderr = stderr
     self.display = display
     self.shell = None
-    self.fio = open(buf, "a")
     self.vim = vim
     self.notifier_id = notifier_id
-    # self.fio = None
 
   def __enter__(self):
 
@@ -131,9 +125,9 @@ class NeoDSCaptureOutput():
 
     stdout = stderr = outputs = None
     if self.stdout:
-      stdout = sys.stdout = NeoDSStream(stream=sys.stdout, fio=self.fio, vim=self.vim, notifier_id=self.notifier_id)
+      stdout = sys.stdout = NeoDSStream(stream=sys.stdout, vim=self.vim, notifier_id=self.notifier_id)
     if self.stderr:
-      stderr = sys.stderr = NeoDSStream(stream=sys.stderr, fio=self.fio, vim=self.vim, notifier_id=self.notifier_id)
+      stderr = sys.stderr = NeoDSStream(stream=sys.stderr, vim=self.vim, notifier_id=self.notifier_id)
     if self.display:
       self.save_display_pub = self.shell.display_pub
       self.shell.display_pub = CapturingDisplayPublisher()
@@ -145,14 +139,13 @@ class NeoDSCaptureOutput():
   def __exit__(self, exc_type, exc_value, traceback):
     sys.stdout = self.sys_stdout
     sys.stderr = self.sys_stderr
-    self.fio.close()
     if self.display and self.shell:
       self.shell.display_pub = self.save_display_pub
       sys.displayhook = self.save_display_hook
 
 
 @magics_class
-class DsMagic(Magics):
+class DsMagicKitty(Magics):
 
   @magic_arguments.magic_arguments()
   @magic_arguments.argument('output', type=str, default='', nargs='?')
@@ -163,16 +156,13 @@ class DsMagic(Magics):
   @magic_arguments.argument('--bufnr', default=None)
   @magic_arguments.argument('--vpath', default=None)
   @cell_magic
-  def neods(self, line, cell):
-    global chunks
-    chunks = []
+  def neods_kitty(self, line, cell):
 
-    args = magic_arguments.parse_argstring(self.neods, line)
+    args = magic_arguments.parse_argstring(self.neods_kitty, line)
     out = not args.no_stdout
     err = not args.no_stderr
     disp = not args.no_display
     buf = args.stream_buffer
-    bufnr = args.bufnr
     vpath = args.vpath
 
     vim = attach('socket', path=vpath)
@@ -190,39 +180,10 @@ notifiers = {{}}
 notifiers['{notifier_id}'] = require('notify')(nprint, 'warn', {{title='started : code', timeout = 300000}})
     """)
 
-    if '<!--markdown-->' in input_code:
-      showcell = re.findall(r'"""\n<!--markdown-->((.|\n)*)"""', input_code)[0][0]
-      md_cell = f"""
----------------------------------------------------------------------------
-{showcell.strip()}
-
-"""
-    else:
-      md_cell = f"""
----------------------------------------------------------------------------
-```python
-{input_code.strip()}
-```
-##########################################################################
-###### Output[{self.shell.execution_count}]:
-"""
-    with open(buf, "a") as fio:
-      fio.write(md_cell)
-
-    start = time.time()
-
     with NeoDSCaptureOutput(out, err, disp, buf, vim, notifier_id) as iostream:
       result = self.shell.run_cell(input_code)
     if args.output:
       self.shell.user_ns[args.output] = iostream
-
-    elapsed = time.time() - start
-
-    # captured_out = ansi_escape.sub('',str(iostream.stdout))
-    captured_out = ansi_escape.sub('', ''.join(chunks)).replace('\r', '\n')
-
-    # vim.command("e")
-    # vim.command("G")
 
     if result.error_before_exec or result.error_in_exec:
       title = 'Error!'
@@ -231,13 +192,9 @@ notifiers['{notifier_id}'] = require('notify')(nprint, 'warn', {{title='started 
     else:
       title = 'Done'
       state = 'info'
-      # content = summary(captured_out.strip())
-
-      # content = summary(str(iostream).strip())
       content = str(iostream).strip()
 
-    with open(buf, "a") as fio:
-      fio.write(f"\n<!-- {datetime.datetime.utcnow()}, Elapsed: {elapsed}, filename: TODO -->\n")
+
 
     vim.exec_lua(f"""
 local nprint = [[

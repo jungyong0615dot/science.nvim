@@ -67,13 +67,25 @@ end
 
 
 M.send_current_section = function(terminal_job_id)
-  -- send current section to ipython kernel
+  -- -- send current section to ipython kernel
+  -- if terminal_job_id == nil then
+  --   local terminal_job_ids, _ = require('neovim-ds.lua.terminal').get_terminals()
+  --   terminal_job_id = terminal_job_ids[1]
+  -- end
+
+  code = M.get_section()
+  M.send_code(terminal_job_id, code)
+--   M.save_code_to_file(code, vim.g.neods_output_buf .. "_code") -- TODO: replace to json
+--   M.ipython_send_code(terminal_job_id, [[
+-- print("send")
+--   ]])
+end
+
+M.send_code = function(terminal_job_id, code)
   if terminal_job_id == nil then
     local terminal_job_ids, _ = require('neovim-ds.lua.terminal').get_terminals()
     terminal_job_id = terminal_job_ids[1]
   end
-
-  code = M.get_section()
   M.save_code_to_file(code, vim.g.neods_output_buf .. "_code") -- TODO: replace to json
   M.ipython_send_code(terminal_job_id, [[
 print("send")
@@ -111,7 +123,8 @@ M.async_ipython_send_code = function(terminal_job_id, code, target_processor, bl
 end
 
 
-M.open_ipykernel = function()
+M.open_ipykernel = function(python_executable)
+  python_executable = python_executable or os.getenv("NVIM_NEODS_PYTHON")
 
   -- open output buffer
   -- TODO: default path
@@ -125,10 +138,6 @@ M.open_ipykernel = function()
 
   local terminal_job_ids, _ = require('neovim-ds.lua.terminal').get_terminals()
 
-  -- conda activate
-  -- TODO: deal with multiple terminals
-  -- TODO: python env as variable
-  python_executable = os.getenv("NVIM_NEODS_PYTHON")
 
   ipython3 = Path:new(python_executable):parent() / 'ipython3'
 
@@ -164,8 +173,9 @@ M.open_ipykernel = function()
   require('neovim-ds.lua.terminal').send_command(terminal_job_ids[1], ipython3 .. ' -i --no-autoindent --profile=neods -c "' .. startup_cmd .. '"')
   vim.cmd('sleep 1')
   vim.api.nvim_create_autocmd({"FocusGained", "BufEnter", "CursorHold", "CursorHoldI"}, {
+    pattern = {"*.md", "*.py"},
     callback = function()
-      if vim.api.nvim_get_mode().mode ~= 'c' then
+      if vim.api.nvim_get_mode().mode ~= 'c' and vim.fn.pumvisible() == 0 then
         vim.api.nvim_command("checktime")
         -- vim.api.nvim_command("e")
       end
