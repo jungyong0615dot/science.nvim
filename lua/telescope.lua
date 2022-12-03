@@ -14,12 +14,11 @@ local cell_previewer = defaulter(function(opts)
 	return previewers.new_buffer_previewer({
 		title = "cell",
 		get_buffer_by_name = function(_, entry)
-			return entry.value
+			return entry.text
 		end,
 		define_preview = function(self, entry)
 			local bufnr = self.state.bufnr
 			vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(entry.text, "\n"))
-      vim.pretty_print(entry.type)
 			vim.api.nvim_buf_set_option(bufnr, "filetype", entry.type)
 		end,
 	})
@@ -56,15 +55,19 @@ M.show_cells = function()
   local section = {type='python', lines={}, title='', cell='', line_start=0, line_end=0}
   for idx, line in ipairs(current_buffer) do
     if string.match(line, 'NOTE:') or string.match(line, '%%%%') or idx == #(current_buffer) then
-      if is_md_cell(section.lines) then
-        section.type = 'markdown'
-      else
-        section.type = 'python'
+      if vim.bo.filetype == 'python' then
+        if is_md_cell(section.lines) and vim.bo.filetype == 'python' then
+          section.type = 'markdown'
+        else
+          section.type = 'python'
+        end
+      elseif vim.bo.filetype == 'lua' then
+        section.type = 'lua'
       end
 
-      if section.type == 'python' then
+      if section.type == 'python' or section.type == 'lua' then
 
-        if #(section.lines) > 0 and string.sub(section.lines[1], 1, 1) == "#" then
+        if #(section.lines) > 0 and (string.sub(section.lines[1], 1, 1) == "#" or string.sub(section.lines[1], 1, 1) == "-") then
           section.title = ' v ' .. section.lines[1]:sub(3)
         else
           section.title = ''
@@ -88,7 +91,7 @@ M.show_cells = function()
         table.insert(sections, section)
       end
 
-      section = {type='python', lines={}, title='', cell='', line_start=0, line_end=0}
+      section = {type=section.type, lines={}, title='', cell='', line_start=0, line_end=0}
     else
       table.insert(section['lines'], line)
     end
@@ -104,10 +107,10 @@ M.show_cells = function()
 				results = sections,
 				entry_maker = function(entry)
 					return {
-						value = entry.cell,
+						value = entry.title,
 						display = entry.title,
 						text = entry.cell,
-						ordinal = entry,
+						ordinal = entry.title,
             type = entry.type,
 						line_start = entry.line_start,
 					}
@@ -120,7 +123,6 @@ M.show_cells = function()
 				actions.select_default:replace(function()
 					local selection = actions_state.get_selected_entry()
 					actions.close(prompt_bufnr)
-					print("Enjoy venv! You picked:", selection.display)
 					vim.api.nvim_win_set_cursor(0, { selection.line_start, 0 })
 				end)
 				return true

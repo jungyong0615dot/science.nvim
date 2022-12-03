@@ -184,10 +184,6 @@ M.open_ipykernel = function(python_executable)
 
 end
 
-M.add_marker = function(marker, lnum)
-  vim.fn.append(lnum, marker)
-end
-
 M.create_marker = function(type, is_cell_end)
   -- type: python, markdown
   -- if the end of the doc, add one more marker -> It's because of the treesitter highlight behaviour.
@@ -238,7 +234,7 @@ M.create_cell = function(type, cmd)
   end
 
   local marker = M.create_marker(type, is_cell_end)
-  M.add_marker(marker, target_line)
+  vim.fn.append(target_line, marker)
 
   if is_cell_end then
     newcursor = newcursor + 1

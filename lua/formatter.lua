@@ -19,7 +19,7 @@ M.get_root = function(bufnr)
 end
 
 M.open_floating_cell = function(filetype)
-  if filetype == 'python' then
+  if filetype == 'python' or filetype == "lua" or filetype == "markdown" then
 
     local width = vim.api.nvim_get_option("columns")
     local height = vim.api.nvim_get_option("lines")
@@ -29,7 +29,7 @@ M.open_floating_cell = function(filetype)
     local col = math.ceil((width - win_width) / 2)
     local buf = vim.api.nvim_create_buf(true, true)
 
-    vim.api.nvim_buf_set_option(buf, "filetype", "python")
+    vim.api.nvim_buf_set_option(buf, "filetype", filetype)
     vim.b[buf].parent_buf = vim.api.nvim_get_current_buf()
     local _ = vim.api.nvim_open_win(buf, true, {style = "minimal", relative = "editor",row=row, col=col, width=win_width, height=win_height, border = "rounded"})
     vim.w.is_floating_scratch = true
@@ -74,7 +74,7 @@ M.open_floating_cell = function(filetype)
     local buf = vim.api.nvim_create_buf(true, true)
 
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, cell_sql)
-    vim.api.nvim_buf_set_option(buf, "filetype", "sql")
+    vim.api.nvim_buf_set_option(buf, "filetype", filetype)
     vim.b[buf].parent_buf = vim.api.nvim_get_current_buf()
     vim.b[buf].is_tmp_sql = true
     -- local win = vim.api.nvim_open_win(buf, true, {style = "minimal", relative = "editor",row=row, col=col, width=win_width, height=win_height, border = "rounded"})

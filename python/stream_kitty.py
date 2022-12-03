@@ -204,10 +204,12 @@ local tmo = 5000
 if vim.g.focused == 0 then
   tmo = 10000
 end
+print(vim.g.focused)
 require('notify')(nprint, '{state}', {{title='{title} : result', replace=notifiers['{notifier_id}'], timeout = tmo}})
+    
 if vim.g.focused == 0 then
   io.popen([[
-  osascript -e 'display notification "Done" with title "ipython - {title}"'
+  osascript -e 'display notification "Done" with title "ipython"'
   ]])
 end
     """)
