@@ -7,7 +7,7 @@ local finders = require("telescope.finders")
 local pickers = require("telescope.pickers")
 local conf = require("telescope.config").values
 
-local kernel = require('neovim-ds.lua.kernel')
+local kernel = require('neoscience.kernel')
 
 M.open_kitty_layout = function(opts)
   require "plugins.configs.telescope"
@@ -56,7 +56,7 @@ end
 
 M.open_ipykernel = function(opts, kitty_title, python_executable)
   if kitty_title == nil then
-    kitty_title = require('neovim-ds.lua.utils').randomString(5)
+    kitty_title = require('neoscience.utils').randomString(5)
   end
 
   python_executable = python_executable or os.getenv("NVIM_NEODS_PYTHON")
@@ -85,7 +85,7 @@ M.open_ipykernel = function(opts, kitty_title, python_executable)
 					actions.close(prompt_bufnr)
 					print("Enjoy venv! You picked:", selection.display)
           M.open_kitty(selection.display, kitty_title)
-          vim.g.neods_output_buf = os.getenv("NVIM_NEODS_OUTPUT") .. "tmp_" .. require('neovim-ds.lua.utils').randomString(5) .. ".md"
+          vim.g.neods_output_buf = os.getenv("NVIM_NEODS_OUTPUT") .. "tmp_" .. require('neoscience.utils').randomString(5) .. ".md"
           vim.g.neods_target_channel = vim.v.servername
           vim.g.kitty_title = kitty_title
           vim.cmd('sleep 100m')

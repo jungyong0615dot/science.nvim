@@ -44,7 +44,7 @@ M.open_ipython_with_pick = function(opts)
 					actions.close(prompt_bufnr)
 					print("Enjoy venv! You picked:", selection.display)
           require('custom.plugins.lspconfig').set_python_lsp(selection.display)
-          require('neovim-ds.lua.kernel').open_ipykernel(selection.display .. '/python3')
+          require('neoscience.kernel').open_ipykernel(selection.display .. '/python3')
 				end)
 				return true
 			end,
@@ -75,7 +75,7 @@ M.open_ipython_with_pick_kitty = function(opts, kitty_title)
 					actions.close(prompt_bufnr)
 					print("Enjoy venv! You picked:", selection.display)
           require('custom.plugins.lspconfig').set_python_lsp(selection.display)
-          require('neovim-ds.lua.kitty').open_ipykernel({} ,kitty_title, selection.display .. '/python3')
+          require('neoscience.kitty').open_ipykernel({} ,kitty_title, selection.display .. '/python3')
 				end)
 				return true
 			end,

@@ -3,7 +3,7 @@ local M = {}
 local Path = require('plenary.path')
 
 local function script_path()
-  -- show current path of plugin. e.g. $HOME/.config/nvim/lua/neovim-ds/lua/
+  -- show current path of plugin. e.g. 
   local str = debug.getinfo(2, "S").source:sub(2)
   return str:match("(.*/)")
 end
@@ -55,7 +55,7 @@ M.format_current_section = function()
   if (pos2 == nil)  or (pos2 == 0) then
     pos2 = vim.fn.line('$')
   end
-  require('neovim-ds.lua.formatter').format_dat_sql(nil, pos1, pos2)
+  require('neoscience.formatter').format_dat_sql(nil, pos1, pos2)
 
   local pos1 = vim.fn.search('# %%', 'nbW') + 1
   local pos2 = vim.fn.search('# %%', 'nW') - 1
@@ -67,13 +67,7 @@ end
 
 
 M.send_current_section = function(terminal_job_id)
-  -- -- send current section to ipython kernel
-  -- if terminal_job_id == nil then
-  --   local terminal_job_ids, _ = require('neovim-ds.lua.terminal').get_terminals()
-  --   terminal_job_id = terminal_job_ids[1]
-  -- end
-
-  code = M.get_section()
+  local code = M.get_section()
   M.send_code(terminal_job_id, code)
 --   M.save_code_to_file(code, vim.g.neods_output_buf .. "_code") -- TODO: replace to json
 --   M.ipython_send_code(terminal_job_id, [[
@@ -83,7 +77,7 @@ end
 
 M.send_code = function(terminal_job_id, code)
   if terminal_job_id == nil then
-    local terminal_job_ids, _ = require('neovim-ds.lua.terminal').get_terminals()
+    local terminal_job_ids, _ = require('neoscience.terminal').get_terminals()
     terminal_job_id = terminal_job_ids[1]
   end
   M.save_code_to_file(code, vim.g.neods_output_buf .. "_code") -- TODO: replace to json
@@ -95,7 +89,7 @@ end
 M.async_send_current_section = function(terminal_job_id, target_processor, block)
   -- send current section to ipython kernel
   if terminal_job_id == nil then
-    local terminal_job_ids, _ = require('neovim-ds.lua.terminal').get_terminals()
+    local terminal_job_ids, _ = require('neoscience.terminal').get_terminals()
     terminal_job_id = terminal_job_ids[1]
   end
 
@@ -109,7 +103,7 @@ end
 M.ipython_send_code = function(terminal_job_id, code)
   -- Send codes to specified terminal
   term_cmd = "%%neods output --stream-buffer " .. vim.g.neods_output_buf .. " --vpath " .. vim.g.neods_target_channel .. "\n" .. code .. "\r\r"
-  require('neovim-ds.lua.terminal').send_command(terminal_job_id, term_cmd)
+  require('neoscience.terminal').send_command(terminal_job_id, term_cmd)
 end
 
 M.async_ipython_send_code = function(terminal_job_id, code, target_processor, block)
@@ -119,7 +113,7 @@ M.async_ipython_send_code = function(terminal_job_id, code, target_processor, bl
   else
     term_cmd = "%%px --targets " .. target_processor .. " --noblock" .. "\n" .. "%%neods output --stream-buffer " .. vim.g.neods_output_buf .. " --vpath " .. vim.g.neods_target_channel .. "\n" .. code .. "\r\r"
   end
-  require('neovim-ds.lua.terminal').send_command(terminal_job_id, term_cmd)
+  require('neoscience.terminal').send_command(terminal_job_id, term_cmd)
 end
 
 
@@ -128,7 +122,7 @@ M.open_ipykernel = function(python_executable)
 
   -- open output buffer
   -- TODO: default path
-  vim.g.neods_output_buf = os.getenv("NVIM_NEODS_OUTPUT") .. "tmp_" .. require('neovim-ds.lua.utils').randomString(5) .. ".md"
+  vim.g.neods_output_buf = os.getenv("NVIM_NEODS_OUTPUT") .. "tmp_" .. require('neoscience.utils').randomString(5) .. ".md"
   vim.cmd("e " .. vim.g.neods_output_buf)
 
   -- Open ipython kernel with new nvim terminal, and temporary buffer
@@ -136,7 +130,7 @@ M.open_ipykernel = function(python_executable)
   vim.cmd('sleep 100m')
 
 
-  local terminal_job_ids, _ = require('neovim-ds.lua.terminal').get_terminals()
+  local terminal_job_ids, _ = require('neoscience.terminal').get_terminals()
 
 
   ipython3 = Path:new(python_executable):parent() / 'ipython3'
@@ -170,7 +164,7 @@ M.open_ipykernel = function(python_executable)
   end
 
   -- open ipython
-  require('neovim-ds.lua.terminal').send_command(terminal_job_ids[1], ipython3 .. ' -i --no-autoindent --profile=neods -c "' .. startup_cmd .. '"')
+  require('neoscience.terminal').send_command(terminal_job_ids[1], ipython3 .. ' -i --no-autoindent --profile=neods -c "' .. startup_cmd .. '"')
   vim.cmd('sleep 1')
   vim.api.nvim_create_autocmd({"FocusGained", "BufEnter", "CursorHold", "CursorHoldI"}, {
     pattern = {"*.md", "*.py"},

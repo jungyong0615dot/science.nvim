@@ -128,11 +128,20 @@ class NeoDSCaptureOutput():
       stdout = sys.stdout = NeoDSStream(stream=sys.stdout, vim=self.vim, notifier_id=self.notifier_id)
     if self.stderr:
       stderr = sys.stderr = NeoDSStream(stream=sys.stderr, vim=self.vim, notifier_id=self.notifier_id)
+    if self.display:
+      self.save_display_pub = self.shell.display_pub
+      self.shell.display_pub = CapturingDisplayPublisher()
+      outputs = self.shell.display_pub.outputs
+      self.save_display_hook = sys.displayhook
+      sys.displayhook = CapturingDisplayHook(shell=self.shell, outputs=outputs)
     return CapturedIO(stdout, stderr, outputs)
 
   def __exit__(self, exc_type, exc_value, traceback):
     sys.stdout = self.sys_stdout
     sys.stderr = self.sys_stderr
+    if self.display and self.shell:
+      self.shell.display_pub = self.save_display_pub
+      sys.displayhook = self.save_display_hook
 
 
 @magics_class
@@ -146,7 +155,6 @@ class DsMagicKitty(Magics):
   @magic_arguments.argument('--stream-buffer', default='')
   @magic_arguments.argument('--bufnr', default=None)
   @magic_arguments.argument('--vpath', default=None)
-
   @cell_magic
   def neods_kitty(self, line, cell):
 
@@ -162,6 +170,7 @@ class DsMagicKitty(Magics):
     with open(buf + "_code", 'r') as input_file:
       input_code = re.sub(chr(0), '\n', input_file.read())
 
+
     col_in = "\u001b[32m"
     sys.stdout.write("\n" + col_in + "╭───────── In ─────────•••\n")
     input_cmd = re.sub(r"^\s+", "", input_code)
@@ -170,7 +179,6 @@ class DsMagicKitty(Magics):
     input_cmd = re.sub(r"\n", col_in + "\n│ ", input_cmd)
     sys.stdout.write(input_cmd)
     sys.stdout.write(col_in + "\n╰──────────────────────•••\u001b[0m\n")
-
 
     notifier_id = str(uuid.uuid4()).replace("-", "")
 
@@ -197,6 +205,7 @@ notifiers['{notifier_id}'] = require('notify')(nprint, 'warn', {{title='started 
       content = str(iostream).strip()
 
 
+
     vim.exec_lua(f"""
 local nprint = [[
 {content}
@@ -206,7 +215,7 @@ if vim.g.focused == 0 then
   tmo = 10000
 end
 print(vim.g.focused)
-require('notify')(nprint, '{state}', {{title='{title} : result', replace=notifiers['{notifier_id}'], timeout = tmo, max_width=3000}})
+require('notify')(nprint, '{state}', {{title='{title} : result', replace=notifiers['{notifier_id}'], timeout = tmo}})
     
 if vim.g.focused == 0 then
   io.popen([[
