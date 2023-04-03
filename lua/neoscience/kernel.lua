@@ -142,6 +142,7 @@ M.open_ipykernel = function(python_executable)
   lua_path = script_path()
   startup_cmds = {}
   table.insert(startup_cmds, "os.environ['NEODS_ASYNC_BUF'] = '".. vim.g.neods_output_buf .. "'")
+
   table.insert(startup_cmds, "os.environ['NEODS_ASYNC_VPATH'] = '".. vim.g.neods_target_channel .. "'")
   -- table.insert(startup_cmds, "from pathlib import Path")
   -- table.insert(startup_cmds, "import sys")
