@@ -245,6 +245,8 @@ M.convert_to_ipynb = function(input)
   output = string.sub(input, 0,-4) .. '.ipynb'
   lua_path = script_path()
   -- TODO: python3 file
+  
+  convert_py = Path:new(lua_path):parent()
   vim.fn.system(os.getenv("NVIM_NEODS_PYTHON") .. ' ' .. lua_path .. '../python/convert.py ' .. '--input ' .. input .. ' --output ' .. output)
   print("converted to " .. output)
 end

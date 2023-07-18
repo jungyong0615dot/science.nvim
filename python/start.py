@@ -24,6 +24,22 @@ matplotlib.rcParams['ytick.labelsize'] = 20
 get_ipython().register_magics(DsMagic)
 get_ipython().register_magics(DsMagicKitty)
 
+
+import pyperclip as clip
+import pandas as pd
+
+def xprint(arg_str):
+  """ print and then copy to clipboard.
+      arg_str (): string to print and copy
+  """
+  if isinstance(arg_str, pd.DataFrame):
+    arg_str_clipboard = arg_str.to_markdown()
+    mprint(arg_str)
+  else:
+    arg_str_clipboard = str(arg_str)
+    print(arg_str)
+  clip.copy(str(arg_str_clipboard))
+
 # get_ipython().register_magics(AsyncDsMagic)
 
 # rc = ipp.Cluster(n=2).start_and_connect_sync()
