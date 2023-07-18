@@ -118,11 +118,11 @@ end
 
 
 M.open_ipykernel = function(python_executable)
-  python_executable = python_executable or os.getenv("NVIM_NEODS_PYTHON")
+  python_executable = python_executable or os.getenv("NVIM_SCIENCE_PYTHON")
 
   -- open output buffer
   -- TODO: default path
-  vim.g.neods_output_buf = os.getenv("NVIM_NEODS_OUTPUT") .. "tmp_" .. require('neoscience.utils').randomString(5) .. ".md"
+  vim.g.neods_output_buf = os.getenv("NVIM_SCIENCE_OUTPUT") .. "tmp_" .. require('neoscience.utils').randomString(5) .. ".md"
   vim.cmd("e " .. vim.g.neods_output_buf)
 
   -- Open ipython kernel with new nvim terminal, and temporary buffer
@@ -245,7 +245,7 @@ M.convert_to_ipynb = function(input)
   output = string.sub(input, 0,-4) .. '.ipynb'
   lua_path = script_path()
   -- TODO: python3 file
-  vim.fn.system(os.getenv("NVIM_NEODS_PYTHON") .. ' ' .. lua_path .. '../python/convert.py ' .. '--input ' .. input .. ' --output ' .. output)
+  vim.fn.system(os.getenv("NVIM_SCIENCE_PYTHON") .. ' ' .. lua_path .. '../python/convert.py ' .. '--input ' .. input .. ' --output ' .. output)
   print("converted to " .. output)
 end
 

@@ -11,7 +11,7 @@ from pathlib import Path
 import matplotlib
 from IPython import get_ipython
 
-sys.path.append(str(Path(os.getenv('NVIM_NEODS_SRC')) / 'python'))
+sys.path.append(str(Path(os.getenv('NVIM_SCIENCE_SRC')) / 'python'))
 from stream import DsMagic, kshow, mprint
 from stream_kitty import DsMagicKitty
 
@@ -39,7 +39,7 @@ get_ipython().register_magics(DsMagicKitty)
 #
 # def initialize_clusters():
 #   nest_asyncio.apply()
-#   sys.path.append(str(Path(os.getenv('NVIM_NEODS_SRC')) / 'python'))
+#   sys.path.append(str(Path(os.getenv('NVIM_SCIENCE_SRC')) / 'python'))
 #   from stream import DsMagic, kshow
 #   get_ipython().register_magics(AsyncDsMagic)
 
