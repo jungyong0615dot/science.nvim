@@ -59,7 +59,7 @@ M.open_ipykernel = function(opts, kitty_title, python_executable)
     kitty_title = require('neoscience.utils').randomString(5)
   end
 
-  python_executable = python_executable or os.getenv("NVIM_NEODS_PYTHON")
+  python_executable = python_executable or os.getenv("NVIM_SCIENCE_PYTHON")
   ipython3 = Path:new(python_executable):parent() / 'ipython3'
 
 
@@ -85,7 +85,7 @@ M.open_ipykernel = function(opts, kitty_title, python_executable)
 					actions.close(prompt_bufnr)
 					print("Enjoy venv! You picked:", selection.display)
           M.open_kitty(selection.display, kitty_title)
-          vim.g.neods_output_buf = os.getenv("NVIM_NEODS_OUTPUT") .. "tmp_" .. kitty_title .. ".md"
+          vim.g.neods_output_buf = os.getenv("NVIM_SCIENCE_OUTPUT") .. "tmp_" .. kitty_title .. ".md"
 
           vim.g.neods_target_channel = vim.v.servername
           vim.t.kitty_title = kitty_title
@@ -158,7 +158,7 @@ M.reconnect = function()
 					local selection = actions_state.get_selected_entry()
 					actions.close(prompt_bufnr)
 					print("Enjoy venv! You picked:", selection.value)
-          vim.g.neods_output_buf = os.getenv("NVIM_NEODS_OUTPUT") .. "tmp_" .. selection.value .. ".md"
+          vim.g.neods_output_buf = os.getenv("NVIM_SCIENCE_OUTPUT") .. "tmp_" .. selection.value .. ".md"
 
           vim.g.neods_target_channel = vim.v.servername
           vim.t.kitty_title = selection.value

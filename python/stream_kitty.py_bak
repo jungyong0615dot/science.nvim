@@ -50,7 +50,7 @@ def kshow(plt):
   Args:
       plt (): matplotlib object
   """
-  savepath = Path(os.getenv('NVIM_NEODS_OUTPUT')) / f'tmp_{str(uuid.uuid4())}.png'
+  savepath = Path(os.getenv('NVIM_SCIENCE_OUTPUT')) / f'tmp_{str(uuid.uuid4())}.png'
   # savepath = f'/Users/jungyonglee/Jungyong/tmp/nds/ouptut/tmp_{str(uuid.uuid4())}.png'
 
   plt.savefig(savepath)
