@@ -291,4 +291,36 @@ M.convert_to_ipynb = function(input)
 	print("converted to " .. output)
 end
 
+
+M.convert_to_py = function(input_file, output_file)
+  local input = vim.fn.json_decode(vim.fn.readfile(input_file))
+  
+  local lines = {}
+  for _, cell in ipairs(input.cells) do
+    if cell.cell_type == "code" then
+      table.insert(lines, "# %% NOTE:")
+      local source = cell.source
+      for _, line in ipairs(source) do
+        -- replace \n into blanK
+        line = string.gsub(line, "\n", "")
+        table.insert(lines, line)
+      end
+      table.insert(lines, "")
+    elseif cell.cell_type == "markdown" then
+      local source = cell.source
+      table.insert(lines, "# %% NOTE: [markdown]")
+      table.insert(lines, '_ = """')
+      table.insert(lines, "<!--markdown-->")
+      for _, line in ipairs(source) do
+        line = string.gsub(line, "\n", "")
+        table.insert(lines, line)
+      end
+      table.insert(lines, '"""')
+      table.insert(lines, "")
+    end
+  end
+  vim.fn.writefile(lines, output_file)
+  -- vim.pretty_print(vim.fn.join(lines, "\n"))
+end
+
 return M
