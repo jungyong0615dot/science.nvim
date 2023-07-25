@@ -44,7 +44,12 @@ local get_markdown_lines = function(lines)
 end
 
 
-M.show_cells = function()
+M.show_cells = function(open)
+  if vim.bo.filetype ~= 'python' and vim.bo.filetype ~= 'lua' then
+    return nil
+  end
+
+
 	local current_buffer = vim.api.nvim_buf_get_lines(0, 0, -1, false)
 	-- current_buffer = vim.fn.join(current_buffer, "\n")
 	local current_cursor = vim.api.nvim_win_get_cursor(0)[1]
@@ -99,36 +104,40 @@ M.show_cells = function()
 
 
 
-	pickers
-		.new({}, {
-			prompt_title = "Cells",
-			results_title = "cells",
-			finder = finders.new_table({
-				results = sections,
-				entry_maker = function(entry)
-					return {
-						value = entry.title,
-						display = entry.title,
-						text = entry.cell,
-						ordinal = entry.title,
-            type = entry.type,
-						line_start = entry.line_start,
-					}
-				end,
-			}),
-			previewer = cell_previewer.new({}),
-			sorter = conf.file_sorter({}),
-			default_selection_index = default_selection_index,
-			attach_mappings = function(prompt_bufnr)
-				actions.select_default:replace(function()
-					local selection = actions_state.get_selected_entry()
-					actions.close(prompt_bufnr)
-					vim.api.nvim_win_set_cursor(0, { selection.line_start, 0 })
-				end)
-				return true
-			end,
-		})
-		:find()
+  if open == true then
+    pickers
+      .new({}, {
+        prompt_title = "Cells",
+        results_title = "cells",
+        finder = finders.new_table({
+          results = sections,
+          entry_maker = function(entry)
+            return {
+              value = entry.title,
+              display = entry.title,
+              text = entry.cell,
+              ordinal = entry.title,
+              type = entry.type,
+              line_start = entry.line_start,
+            }
+          end,
+        }),
+        previewer = cell_previewer.new({}),
+        sorter = conf.file_sorter({}),
+        default_selection_index = default_selection_index,
+        attach_mappings = function(prompt_bufnr)
+          actions.select_default:replace(function()
+            local selection = actions_state.get_selected_entry()
+            actions.close(prompt_bufnr)
+            vim.api.nvim_win_set_cursor(0, { selection.line_start, 0 })
+          end)
+          return true
+        end,
+      })
+      :find()
+  else
+    return sections
+  end
 end
 
 return M
