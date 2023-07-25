@@ -22,7 +22,7 @@ M.get_section = function()
   else
     pos2 = pos2 - 1
   end
-  code = vim.fn.join(vim.fn.getline(pos1, pos2), '\n')
+  local code = vim.fn.join(vim.fn.getline(pos1, pos2), '\n')
 
   return code
 end
@@ -93,7 +93,7 @@ M.async_send_current_section = function(terminal_job_id, target_processor, block
     terminal_job_id = terminal_job_ids[1]
   end
 
-  code = M.get_section()
+  local code = M.get_section()
   M.save_code_to_file(code, vim.g.neods_output_buf .. "_code") -- TODO: replace to json
   M.async_ipython_send_code(terminal_job_id, [[
 print("send")
@@ -108,6 +108,7 @@ end
 
 M.async_ipython_send_code = function(terminal_job_id, code, target_processor, block)
   -- Send codes to specified terminal
+  local term_cmd = nil
   if block == nil then
     term_cmd = "%%px --targets " .. target_processor .. " \n" .. "%%async_neods --stream-buffer " .. vim.g.neods_output_buf .. " --vpath " .. vim.g.neods_target_channel .. "\n" .. code .. "\r\r"
   else
@@ -133,14 +134,14 @@ M.open_ipykernel = function(python_executable)
   local terminal_job_ids, _ = require('neoscience.terminal').get_terminals()
 
 
-  ipython3 = Path:new(python_executable):parent() / 'ipython3'
+  local ipython3 = Path:new(python_executable):parent() / 'ipython3'
 
   -- get current instance's channel
   vim.g.neods_target_channel = vim.v.servername
 
   -- Startup commands for ipython
-  lua_path = script_path()
-  startup_cmds = {}
+  local lua_path = script_path()
+  local startup_cmds = {}
   table.insert(startup_cmds, "os.environ['NEODS_ASYNC_BUF'] = '".. vim.g.neods_output_buf .. "'")
 
   table.insert(startup_cmds, "os.environ['NEODS_ASYNC_VPATH'] = '".. vim.g.neods_target_channel .. "'")
@@ -159,7 +160,7 @@ M.open_ipykernel = function(python_executable)
   -- table.insert(startup_cmds, "import ipyparallel as ipp")
   -- table.insert(startup_cmds, "rc = ipp.Cluster(n=4).start_and_connect_sync()")
 
-  startup_cmd = ''
+  local startup_cmd = ''
   for _, cmd in ipairs(startup_cmds) do
     startup_cmd = startup_cmd .. cmd .. ';'
   end
@@ -182,6 +183,7 @@ end
 M.create_marker = function(type, is_cell_end)
   -- type: python, markdown
   -- if the end of the doc, add one more marker -> It's because of the treesitter highlight behaviour.
+  local marker = nil
   if type == 'python' then
     marker = {'# %% NOTE:', '#  ', '', ''}
   elseif type == 'markdown' then
@@ -198,6 +200,11 @@ end
 M.create_cell = function(type, cmd)
   -- type: python, markdown
   -- cmd: below, above
+  local newcursor = nil
+  local target_line = nil
+  local next_cell = nil
+  local is_cell_end = nil
+  local prev_cell = nil
 
   if cmd == "below" then
     target_line = vim.fn.line('.')
@@ -242,10 +249,11 @@ M.convert_to_ipynb = function(input)
   if input == '' then
     input = vim.fn.expand('%:p')
   end
-  output = string.sub(input, 0,-4) .. '.ipynb'
-  lua_path = script_path()
-  -- TODO: python3 file
-  vim.fn.system(os.getenv("NVIM_SCIENCE_PYTHON") .. ' ' .. lua_path .. '../python/convert.py ' .. '--input ' .. input .. ' --output ' .. output)
+  local output = string.sub(input, 0,-4) .. '.ipynb'
+  local lua_path = Path:new(script_path()):parent():parent():absolute()
+  local converter = Path:new(lua_path, 'python', 'convert.py'):absolute()
+  vim.pretty_print(os.getenv("NVIM_SCIENCE_PYTHON") .. " " .. converter .. ' --input ' .. input .. ' --output ' .. output)
+  vim.fn.system(os.getenv("NVIM_SCIENCE_PYTHON") .. " " .. converter .. ' --input ' .. input .. ' --output ' .. output)
   print("converted to " .. output)
 end
 

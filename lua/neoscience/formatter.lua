@@ -18,6 +18,63 @@ M.get_root = function(bufnr)
   return tree:root()
 end
 
+M.replace_triple_double_quotes = function(input_lines, open)
+  local new_lines = {}
+
+  for _, line in ipairs(input_lines) do
+    local new_line = ""
+    local quote_count = 0
+    local i = 1
+
+    while i <= #line do
+      local c = line:sub(i, i)
+      local next_c = line:sub(i+1, i+1)
+      local next_next_c = line:sub(i+2, i+2)
+
+      if c == "\"" and next_c == "\"" and next_next_c == "\"" and line:sub(i-1, i-1) ~= "\\" then
+        new_line = new_line .. "\\\"\\\"\\\""
+        i = i + 3
+      else
+        new_line = new_line .. c
+        i = i + 1
+      end
+    end
+
+    table.insert(new_lines, new_line)
+  end
+
+  if open == true then
+    local width = vim.api.nvim_get_option("columns")
+    local height = vim.api.nvim_get_option("lines")
+    local win_height = math.ceil(height * 0.7 - 4)
+    local win_width = math.ceil(width * 0.7)
+    local row = math.ceil((height - win_height) / 2 - 1)
+    local col = math.ceil((width - win_width) / 2)
+    local buf = vim.api.nvim_create_buf(true, true)
+
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, new_lines)
+    vim.api.nvim_buf_set_option(buf, "filetype", "sql")
+    vim.b[buf].parent_buf = vim.api.nvim_get_current_buf()
+    vim.b[buf].is_tmp_sql = true
+    vim.api.nvim_open_win(buf, true, {relative = "editor",row=row, col=col, width=win_width, height=win_height, border = "rounded"})
+    vim.w.is_floating_scratch = true
+  end
+
+  return new_lines
+end
+
+
+M.unescape_triple_double_quotes = function(input_lines)
+  local new_lines = {}
+
+  for _, line in ipairs(input_lines) do
+    local new_line = line:gsub("\\\"\\\"\\\"", "\"\"\"")
+    table.insert(new_lines, new_line)
+  end
+
+  return new_lines
+end
+
 M.open_floating_cell = function(filetype)
   if filetype == 'python' or filetype == "lua" or filetype == "markdown" then
 
@@ -58,6 +115,7 @@ M.open_floating_cell = function(filetype)
     for _, range in ipairs(ranges) do
       if range[1] >= pos1 and range[2] <= pos2 then
         cell_sql = vim.api.nvim_buf_get_lines(bufnr, range[1], range[2], true)
+        cell_sql = M.unescape_triple_double_quotes(cell_sql)
       end
     end
   else
