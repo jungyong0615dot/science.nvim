@@ -218,7 +218,7 @@ M.create_marker = function(type, is_cell_end)
 	-- if the end of the doc, add one more marker -> It's because of the treesitter highlight behaviour.
 	local marker = nil
 	if type == "python" then
-		marker = { "# %% NOTE:", "#  ", "", "" }
+		marker = { "# %% NOTE:", "# @title INSERT_TITLE", "", "" }
 	elseif type == "markdown" then
 		marker = { "", "# %% NOTE: [markdown]", '_ = """', "<!--markdown-->", "", '"""', "", "" }
 	else
@@ -226,6 +226,7 @@ M.create_marker = function(type, is_cell_end)
 	end
 	if is_cell_end then
 		table.insert(marker, "# %% NOTE:")
+		table.insert(marker, "# @title INSERT_TITLE")
 	end
 	return marker
 end
