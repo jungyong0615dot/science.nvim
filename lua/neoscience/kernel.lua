@@ -286,6 +286,9 @@ M.convert_to_ipynb = function(input)
 	local output = string.sub(input, 0, -4) .. ".ipynb"
 	local lua_path = Path:new(script_path()):parent():parent():absolute()
 	local converter = Path:new(lua_path, "python", "convert.py"):absolute()
+
+  print(os.getenv("NVIM_SCIENCE_PYTHON") .. " " .. converter .. " --input " .. input .. " --output " .. output)
+
 	vim.fn.system(
 		os.getenv("NVIM_SCIENCE_PYTHON") .. " " .. converter .. " --input " .. input .. " --output " .. output
 	)
