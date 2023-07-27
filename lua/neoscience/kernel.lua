@@ -275,7 +275,7 @@ M.create_cell = function(type, cmd)
 	if is_cell_end then
 		newcursor = newcursor + 1
 	end
-	vim.api.nvim_win_set_cursor(0, { newcursor, 3 })
+	vim.api.nvim_win_set_cursor(0, { newcursor, 21 })
 	vim.api.nvim_command("startinsert")
 end
 
