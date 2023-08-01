@@ -1,5 +1,5 @@
 local M = {}
-local embedded_sql = vim.treesitter.parse_query(
+local embedded_sql = vim.treesitter.query.parse_query(
 "python",
   [[
 (
