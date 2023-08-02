@@ -56,7 +56,7 @@ end
 
 M.open_ipykernel = function(opts, kitty_title, python_executable)
   if kitty_title == nil then
-    kitty_title = require('neoscience.utils').randomString(5)
+    kitty_title = vim.t.main_notebook .. "_" .. require('neoscience.utils').randomString(5)
   end
 
   python_executable = python_executable or os.getenv("NVIM_SCIENCE_PYTHON")
@@ -124,7 +124,7 @@ end
 
 M.reconnect = function()
   local kitty_list = vim.fn.system("kitty @ ls")
-  local kitty_windows = cjson.decode(kitty_list)[1].tabs[1].windows
+  local kitty_windows = vim.json.decode(kitty_list)[1].tabs[1].windows
   local ipython_windows = {}
 
   for _, window in ipairs(kitty_windows) do

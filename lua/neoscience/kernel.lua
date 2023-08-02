@@ -218,15 +218,15 @@ M.create_marker = function(type, is_cell_end)
 	-- if the end of the doc, add one more marker -> It's because of the treesitter highlight behaviour.
 	local marker = nil
 	if type == "python" then
-		marker = { "# %% NOTE:", "# @title INSERT_TITLE", "", "" }
+		marker = { "# %% NOTE:", "# @title ", "", "" }
 	elseif type == "markdown" then
-		marker = { "", "# %% NOTE: [markdown]", '_ = """', "<!--markdown-->", "", '"""', "", "" }
+		marker = { "", "# %% NOTE: [markdown]", "# @title Text" ,'_ = """', "<!--markdown-->", "", '"""', "", "" }
 	else
 		marker = { "##", "", "" }
 	end
 	if is_cell_end then
 		table.insert(marker, "# %% NOTE:")
-		table.insert(marker, "# @title INSERT_TITLE")
+		table.insert(marker, "# @title ")
 	end
 	return marker
 end
@@ -275,8 +275,8 @@ M.create_cell = function(type, cmd)
 	if is_cell_end then
 		newcursor = newcursor + 1
 	end
-	vim.api.nvim_win_set_cursor(0, { newcursor, 21 })
 	vim.api.nvim_command("startinsert")
+	vim.api.nvim_win_set_cursor(0, { newcursor, 25 })
 end
 
 M.convert_to_ipynb = function(input)
