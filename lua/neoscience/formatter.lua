@@ -10,8 +10,6 @@ local embedded_sql = vim.treesitter.query.parse(
   ]]
 )
 
-local formatter = require('formatter.format')
-
 M.get_root = function(bufnr)
   local parser = vim.treesitter.get_parser(bufnr, "python", {})
   local tree = parser:parse()[1]
@@ -144,7 +142,7 @@ end
 M.format_dat_sql = function(bufnr, pos1, pos2)
   pos1 = pos1 or 1
   pos2 = pos2 or vim.api.nvim_buf_line_count(0)
-  formatter.start_task({{config = {exe ="yapf", stdin = true }, name = "yapf"}}, pos1, pos2, nil)
+  -- formatter.start_task({{config = {exe ="yapf", stdin = true }, name = "yapf"}}, pos1, pos2, nil)
   vim.cmd('sleep 400m')
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   local root = M.get_root(bufnr)
@@ -169,17 +167,17 @@ M.format_dat_sql = function(bufnr, pos1, pos2)
       end
       file_o:close()
 
-      formatter.start_task({{
-        config = {
-          exe = "dbt-formatter",
-          args = {
-            "--upper",
-            "--file",
-            "/tmp/sqlfile",
-          },
-          stdin = true,
-        },
-      }}, range[1], range[2], nil)
+      -- formatter.start_task({{
+      --   config = {
+      --     exe = "dbt-formatter",
+      --     args = {
+      --       "--upper",
+      --       "--file",
+      --       "/tmp/sqlfile",
+      --     },
+      --     stdin = true,
+      --   },
+      -- }}, range[1], range[2], nil)
       vim.cmd('sleep 400m')
     end
   end

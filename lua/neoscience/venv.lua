@@ -25,7 +25,7 @@ M.get_venvs = function()
   return venvs
 end
 
-M.open_ipython_with_pick = function(opts)
+M.open_ipython_with_pick = function(opts, callback)
   require "plugins.configs.telescope"
 	pickers
 		.new(opts, {
@@ -47,7 +47,8 @@ M.open_ipython_with_pick = function(opts)
 					local selection = actions_state.get_selected_entry()
 					actions.close(prompt_bufnr)
 					print("Enjoy venv! You picked:", selection.display)
-          require('plugins.configs.lspconfig').set_python_lsp(selection.display .. '/python3')
+          callback(selection.display)
+          -- require('plugins.configs.lspconfig').set_python_lsp(selection.display .. '/python3')
           require('neoscience.kernel').open_ipykernel(selection.display .. '/python3')
 				end)
 				return true
@@ -56,7 +57,7 @@ M.open_ipython_with_pick = function(opts)
 		:find()
 end
 
-M.open_ipython_with_pick_kitty = function(opts, kitty_title)
+M.open_ipython_with_pick_kitty = function(opts, kitty_title, callback)
   require "plugins.configs.telescope"
 	pickers
 		.new(opts, {
@@ -79,7 +80,8 @@ M.open_ipython_with_pick_kitty = function(opts, kitty_title)
 					actions.close(prompt_bufnr)
 					print("Enjoy venv! You picked:", selection.display)
           -- TODO: Move into config, not this plugin
-          require('plugins.configs.lspconfig').set_python_lsp(selection.display .. '/python3')
+          callback(selection.display)
+          -- require('plugins.configs.lspconfig').set_python_lsp(selection.display .. '/python3')
           require('neoscience.kitty').open_ipykernel({} ,kitty_title, selection.display .. '/python3')
 				end)
 				return true
