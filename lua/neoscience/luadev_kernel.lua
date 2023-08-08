@@ -16,22 +16,29 @@ local get_section = function()
 end
 
 M.send_current_section = function()
-  lines = get_section()
+  local lines = get_section()
   luadev.exec(lines)
 end
 
-M.create_marker = function(type, is_cell_end)
+M.create_marker = function(_, is_cell_end)
   -- type: python, markdown
   -- if the end of the doc, add one more marker -> It's because of the treesitter highlight behaviour.
+  local marker = nil
+
   marker = {'--%% NOTE:', '-- ', '', ''}
   if is_cell_end then
-    table.insert(marker, '# %% NOTE:')
+    table.insert(marker, '--%% NOTE:')
   end
   return marker
 end
 
 M.create_cell = function(cmd)
   -- cmd: below, above
+  local target_line = nil
+  local next_cell = nil
+  local is_cell_end = nil
+  local newcursor = nil
+  local prev_cell = nil
 
   if cmd == "below" then
     target_line = vim.fn.line('.')
