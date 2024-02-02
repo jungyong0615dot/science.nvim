@@ -218,14 +218,14 @@ M.create_marker = function(type, is_cell_end)
 	-- if the end of the doc, add one more marker -> It's because of the treesitter highlight behaviour.
 	local marker = nil
 	if type == "python" then
-		marker = { "# %% NOTE:", "# @title ", "", "" }
+		marker = { "# %%", "# @title ", "", "" }
 	elseif type == "markdown" then
-		marker = { "", "# %% NOTE: [markdown]", "# @title Text" ,'_ = """', "<!--markdown-->", "", '"""', "", "" }
+		marker = { "", "# %% [markdown]" ,'"""', "<!--markdown-->", "", "",'"""', "", "" }
 	else
 		marker = { "##", "", "" }
 	end
 	if is_cell_end then
-		table.insert(marker, "# %% NOTE:")
+		table.insert(marker, "# %%")
 		table.insert(marker, "# @title ")
 	end
 	return marker
@@ -266,7 +266,7 @@ M.create_cell = function(type, cmd)
 	if type == "python" then
 		newcursor = target_line + 2
 	elseif type == "markdown" then
-		newcursor = target_line + 5
+		newcursor = target_line + 2
 	end
 
 	local marker = M.create_marker(type, is_cell_end)
@@ -302,7 +302,7 @@ M.convert_to_py = function(input_file, output_file)
   local lines = {}
   for _, cell in ipairs(input.cells) do
     if cell.cell_type == "code" then
-      table.insert(lines, "# %% NOTE:")
+      table.insert(lines, "# %%")
       local source = cell.source
       for _, line in ipairs(source) do
         -- replace \n into blanK
@@ -312,7 +312,7 @@ M.convert_to_py = function(input_file, output_file)
       table.insert(lines, "")
     elseif cell.cell_type == "markdown" then
       local source = cell.source
-      table.insert(lines, "# %% NOTE: [markdown]")
+      table.insert(lines, "# %% [markdown]")
       table.insert(lines, '_ = """')
       table.insert(lines, "<!--markdown-->")
       for _, line in ipairs(source) do
