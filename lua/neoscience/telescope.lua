@@ -73,8 +73,7 @@ M.show_cells = function(open)
       if section.type == 'python' or section.type == 'lua' then
 
         if #(section.lines) > 0 and (string.sub(section.lines[1], 1, 1) == "#" or string.sub(section.lines[1], 1, 1) == "-") then
-          local title_str = section.lines[1]:gsub(" @title", ""):sub(3)
-          -- title_str = title_str.replace("@title ", "")
+          local title_str = section.lines[1]:gsub(" code-summary:", ""):sub(3)
           section.title = ' v ' .. title_str
         else
           section.title = ''

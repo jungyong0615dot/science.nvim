@@ -9,14 +9,14 @@ local pickers = require("telescope.pickers")
 local conf = require("telescope.config").values
 
 M.get_venvs = function()
-	miniconda_scan =
+	local miniconda_scan =
 		Scan.scan_dir("/usr/local/Caskroom/miniconda/base/envs", { hidden = false, depth = 1, only_dirs = true })
-	home_venvs_scan = Scan.scan_dir(vim.fn.expand("~") .. "/venvs", { hidden = false, depth = 1, only_dirs = true })
-  pyenv_scan = Scan.scan_dir(vim.fn.expand("~") .. "/.pyenv/versions", { hidden = false, depth = 1, only_dirs = false })
+	local home_venvs_scan = Scan.scan_dir(vim.fn.expand("~") .. "/venvs", { hidden = false, depth = 1, only_dirs = true })
+  local pyenv_scan = Scan.scan_dir(vim.fn.expand("~") .. "/.pyenv/versions", { hidden = false, depth = 1, only_dirs = false })
 
 
 
-	venvs = {}
+	local venvs = {}
 	for _, env_scan in ipairs({ miniconda_scan, home_venvs_scan, pyenv_scan }) do
 		for _, dir in ipairs(env_scan) do
 			table.insert(venvs, dir .. "/bin")
