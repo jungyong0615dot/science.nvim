@@ -25,9 +25,9 @@ M.create_marker = function(_, is_cell_end)
   -- if the end of the doc, add one more marker -> It's because of the treesitter highlight behaviour.
   local marker = nil
 
-  marker = {'--%% NOTE:', '-- ', '', ''}
+  marker = {'--%% NOTE: ', '-- ', '', ''}
   if is_cell_end then
-    table.insert(marker, '--%% NOTE:')
+    table.insert(marker, '--%% NOTE: ')
   end
   return marker
 end
@@ -45,7 +45,7 @@ M.create_cell = function(cmd)
 
     next_cell = vim.fn.search('--%%', 'nW')
     if (next_cell == nil)  or (next_cell == 0) then
-      target_line = vim.fn.line('$')
+      target_line = vim.fn.line('$') - 1
       is_cell_end = true
     else
       target_line = next_cell - 1
@@ -63,7 +63,7 @@ M.create_cell = function(cmd)
     end
   end
 
-  newcursor = target_line + 2
+  newcursor = target_line + 1
 
   local marker = M.create_marker(type, is_cell_end)
   vim.fn.append(target_line, marker)
@@ -71,7 +71,7 @@ M.create_cell = function(cmd)
   if is_cell_end then
     newcursor = newcursor + 1
   end
-  vim.api.nvim_win_set_cursor(0, {newcursor, 3})
+  vim.api.nvim_win_set_cursor(0, {newcursor, 10})
   vim.api.nvim_command('startinsert')
 end
 
